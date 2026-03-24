@@ -1,0 +1,23 @@
+{
+  "name": "poker-cli",
+  "version": "1.0.0",
+  "description": "Poker CLI built with Ink",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/cli.tsx"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.31.0",
+  "dependencies": {
+    "ink": "^6.8.0",
+    "react": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}
