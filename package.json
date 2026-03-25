@@ -3,8 +3,16 @@
   "version": "1.0.0",
   "description": "Poker CLI built with Ink",
   "type": "module",
+  "bin": {
+    "poker-cli": "dist/cli.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "start": "tsx src/cli.tsx"
+    "start": "tsx src/cli.tsx",
+    "build": "node build.mjs",
+    "postbuild": "chmod +x dist/cli.mjs"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +25,7 @@
   "devDependencies": {
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
+    "esbuild": "^0.27.4",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   }

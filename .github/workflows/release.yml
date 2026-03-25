@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run build
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release tarball
+        run: |
+          mkdir -p staging/dist
+          cp dist/cli.mjs staging/dist/
+          echo '{
+            "name": "poker-cli",
+            "version": "${{ steps.version.outputs.version }}",
+            "bin": { "poker-cli": "dist/cli.mjs" }
+          }' > staging/package.json
+          cd staging
+          tar -czf ../poker-cli-${{ steps.version.outputs.version }}.tar.gz .
+
+      - name: Compute sha256
+        id: sha
+        run: echo "sha256=$(shasum -a 256 poker-cli-${{ steps.version.outputs.version }}.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: poker-cli-${{ steps.version.outputs.version }}.tar.gz
+          body: |
+            ## Install
+
+            ```
+            brew install cpotdevin/poker
+            ```
+
+            **SHA256:** `${{ steps.sha.outputs.sha256 }}`
+
+  update-homebrew:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download release tarball and compute sha256
+        id: sha
+        run: |
+          curl -sL "https://github.com/cpotdevin/poker-cli/releases/download/${GITHUB_REF_NAME}/poker-cli-${{ steps.version.outputs.version }}.tar.gz" -o tarball.tar.gz
+          echo "sha256=$(shasum -a 256 tarball.tar.gz | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: cpotdevin/homebrew-poker
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Update formula
+        run: |
+          cat > Formula/poker.rb << 'FORMULA'
+          class Poker < Formula
+            desc "Poker learning tool for the terminal"
+            homepage "https://github.com/cpotdevin/poker-cli"
+            url "https://github.com/cpotdevin/poker-cli/releases/download/v${{ steps.version.outputs.version }}/poker-cli-${{ steps.version.outputs.version }}.tar.gz"
+            sha256 "${{ steps.sha.outputs.sha256 }}"
+            license "MIT"
+
+            depends_on "node@22"
+
+            def install
+              libexec.install "dist/cli.mjs"
+              libexec.install "package.json"
+              (bin/"poker-cli").write <<~SH
+                #!/bin/bash
+                exec "$(brew --prefix node@22)/bin/node" "#{libexec}/dist/cli.mjs" "$@"
+              SH
+            end
+          end
+          FORMULA
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/poker.rb
+          git commit -m "Update poker-cli to ${{ steps.version.outputs.version }}"
+          git push
