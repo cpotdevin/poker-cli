@@ -4,7 +4,7 @@
   "description": "Poker CLI built with Ink",
   "type": "module",
   "bin": {
-    "poker-cli": "dist/cli.mjs"
+    "poker": "dist/cli.mjs"
   },
   "engines": {
     "node": ">=20"

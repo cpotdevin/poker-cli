@@ -34,7 +34,7 @@ jobs:
           echo '{
             "name": "poker-cli",
             "version": "${{ steps.version.outputs.version }}",
-            "bin": { "poker-cli": "dist/cli.mjs" }
+            "bin": { "poker": "dist/cli.mjs" }
           }' > staging/package.json
           cd staging
           tar -czf ../poker-cli-${{ steps.version.outputs.version }}.tar.gz .
@@ -51,7 +51,7 @@ jobs:
             ## Install
 
             ```
-            brew install cpotdevin/poker
+            brew install cpotdevin/tap/poker
             ```
 
             **SHA256:** `${{ steps.sha.outputs.sha256 }}`
@@ -72,7 +72,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          repository: cpotdevin/homebrew-poker
+          repository: cpotdevin/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
       - name: Update formula
@@ -90,7 +90,7 @@ jobs:
             def install
               libexec.install "dist/cli.mjs"
               libexec.install "package.json"
-              (bin/"poker-cli").write <<~SH
+              (bin/"poker").write <<~SH
                 #!/bin/bash
                 exec "$(brew --prefix node@22)/bin/node" "#{libexec}/dist/cli.mjs" "$@"
               SH
