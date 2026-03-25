@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Box, useStdout } from 'ink';
+import { Box, useApp, useInput, useStdout } from 'ink';
 import MainMenu from './screens/MainMenu.js';
 import LearnMenu from './screens/LearnMenu.js';
 import BestHandQuiz from './screens/HandRankingsQuiz.js';
@@ -12,6 +12,12 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('main-menu');
   const { stdout } = useStdout();
   const rows = process.stdout.rows ?? 24;
+
+  const { exit } = useApp();
+
+  useInput((input) => {
+    if (input === 'q') exit();
+  });
 
   const navigate = useCallback((next: Screen) => {
     stdout.write('\x1B[2J\x1B[H');
