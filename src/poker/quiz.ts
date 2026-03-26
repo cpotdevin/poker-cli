@@ -1,6 +1,7 @@
 import { EvaluatedHand, HAND_RANKINGS, HandRanking } from './types.js';
 import { dealHands } from './deck.js';
 import { evaluateHand, findBestHand, hasUniqueBest } from './evaluator.js';
+import { generateHand } from './generator.js';
 
 export type BestHandQuestion = {
   hands: EvaluatedHand[];
@@ -26,11 +27,7 @@ export type NameTheHandQuestion = {
 };
 
 function dealUntilRanking(target: HandRanking): EvaluatedHand {
-  for (;;) {
-    const [rawHand] = dealHands(1);
-    const hand = evaluateHand(rawHand!);
-    if (hand.ranking === target) return hand;
-  }
+  return generateHand(target);
 }
 
 export function generateNameTheHandQuestion(): NameTheHandQuestion {
